@@ -1,0 +1,40 @@
+frame_index,timestamp_sec,timestamp_mmss,face_found,face_probability,face_enthusiastic,body_detected,body_score,body_enthusiastic,decision_reason,frame_label
+0,0.0,00:00,True,0.0014,False,True,0.0,False,face=NOT_enthus (prob=0.00) body=still,not enthusiastic
+5,0.208,00:00,True,0.0219,False,True,0.0475,False,face=NOT_enthus (prob=0.02) body=still,not enthusiastic
+10,0.417,00:00,True,0.3547,False,True,0.0772,False,face=NOT_enthus (prob=0.35) body=still,not enthusiastic
+15,0.625,00:00,True,0.284,False,True,0.1013,True,face=NOT_enthus (prob=0.28) body=active(ignored),not enthusiastic
+20,0.833,00:00,True,0.2384,False,True,0.1113,True,face=NOT_enthus (prob=0.24) body=active(ignored),not enthusiastic
+25,1.042,00:01,True,0.0429,False,True,0.1482,True,face=NOT_enthus (prob=0.04) body=active(ignored),not enthusiastic
+30,1.25,00:01,True,0.0182,False,True,0.1825,True,face=NOT_enthus (prob=0.02) body=active(ignored),not enthusiastic
+35,1.458,00:01,True,0.0692,False,True,0.1892,True,face=NOT_enthus (prob=0.07) body=active(ignored),not enthusiastic
+40,1.667,00:01,True,0.4253,False,True,0.1732,True,face=NOT_enthus (prob=0.43) body=active(ignored),not enthusiastic
+45,1.875,00:01,True,0.597,True,True,0.1706,True,face=ENTHUS (prob=0.60) body=active,enthusiastic
+50,2.083,00:02,True,0.697,True,True,0.1493,True,face=ENTHUS (prob=0.70) body=active,enthusiastic
+55,2.292,00:02,True,0.5875,True,True,0.1113,True,face=ENTHUS (prob=0.59) body=active,enthusiastic
+60,2.5,00:02,True,0.8114,True,True,0.101,True,face=ENTHUS (prob=0.81) body=active,enthusiastic
+65,2.708,00:02,True,0.2916,False,True,0.1244,True,face=NOT_enthus (prob=0.29) body=active(ignored),not enthusiastic
+70,2.917,00:02,True,0.4713,False,True,0.1118,True,face=NOT_enthus (prob=0.47) body=active(ignored),not enthusiastic
+75,3.125,00:03,True,0.8473,True,True,0.106,True,face=ENTHUS (prob=0.85) body=active,enthusiastic
+80,3.333,00:03,True,0.2731,False,True,0.0959,True,face=NOT_enthus (prob=0.27) body=active(ignored),not enthusiastic
+85,3.542,00:03,True,0.3087,False,True,0.0903,True,face=NOT_enthus (prob=0.31) body=active(ignored),not enthusiastic
+90,3.75,00:03,True,0.937,True,True,0.0696,False,face=ENTHUS (prob=0.94) body=still,enthusiastic
+95,3.958,00:03,True,0.3502,False,True,0.0718,False,face=NOT_enthus (prob=0.35) body=still,not enthusiastic
+100,4.167,00:04,True,0.5001,True,True,0.0799,False,face=ENTHUS (prob=0.50) body=still,enthusiastic
+105,4.375,00:04,True,0.9095,True,True,0.0934,True,face=ENTHUS (prob=0.91) body=active,enthusiastic
+110,4.583,00:04,True,0.8862,True,True,0.0958,True,face=ENTHUS (prob=0.89) body=active,enthusiastic
+115,4.792,00:04,True,0.8694,True,True,0.0846,True,face=ENTHUS (prob=0.87) body=active,enthusiastic
+120,5.0,00:05,True,0.4565,False,True,0.0798,False,face=NOT_enthus (prob=0.46) body=still,not enthusiastic
+125,5.208,00:05,True,0.1687,False,True,0.0887,True,face=NOT_enthus (prob=0.17) body=active(ignored),not enthusiastic
+130,5.417,00:05,True,0.2406,False,True,0.087,True,face=NOT_enthus (prob=0.24) body=active(ignored),not enthusiastic
+135,5.625,00:05,True,0.2474,False,True,0.0745,False,face=NOT_enthus (prob=0.25) body=still,not enthusiastic
+140,5.833,00:05,True,0.0579,False,True,0.0817,True,face=NOT_enthus (prob=0.06) body=active(ignored),not enthusiastic
+145,6.042,00:06,True,0.0321,False,True,0.0874,True,face=NOT_enthus (prob=0.03) body=active(ignored),not enthusiastic
+150,6.25,00:06,True,0.2447,False,True,0.0823,True,face=NOT_enthus (prob=0.24) body=active(ignored),not enthusiastic
+155,6.458,00:06,True,0.276,False,True,0.0882,True,face=NOT_enthus (prob=0.28) body=active(ignored),not enthusiastic
+160,6.667,00:06,True,0.5384,True,True,0.0982,True,face=ENTHUS (prob=0.54) body=active,enthusiastic
+165,6.875,00:06,True,0.2635,False,True,0.1145,True,face=NOT_enthus (prob=0.26) body=active(ignored),not enthusiastic
+170,7.083,00:07,True,0.0911,False,True,0.1036,True,face=NOT_enthus (prob=0.09) body=active(ignored),not enthusiastic
+175,7.292,00:07,True,0.5137,True,True,0.0993,True,face=ENTHUS (prob=0.51) body=active,enthusiastic
+180,7.5,00:07,True,0.9166,True,True,0.1126,True,face=ENTHUS (prob=0.92) body=active,enthusiastic
+185,7.708,00:07,True,0.9828,True,True,0.109,True,face=ENTHUS (prob=0.98) body=active,enthusiastic
+190,7.917,00:07,True,0.9571,True,True,0.1208,True,face=ENTHUS (prob=0.96) body=active,enthusiastic

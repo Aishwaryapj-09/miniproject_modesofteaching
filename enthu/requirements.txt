@@ -1,0 +1,22 @@
+# requirements.txt
+# Project: A Unified Behavioural Intelligence System for Academic Spaces
+# Python >= 3.10 recommended
+
+# Core computer vision
+opencv-python>=4.8.0
+
+# Deep learning (MobileNetV2 backbone)
+tensorflow>=2.13.0
+
+# Pose estimation
+mediapipe>=0.10.3
+
+# Data handling
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Visualization (training curves)
+matplotlib>=3.7.0
+
+# Optional: GPU acceleration (uncomment if CUDA available)
+# tensorflow-gpu>=2.13.0
