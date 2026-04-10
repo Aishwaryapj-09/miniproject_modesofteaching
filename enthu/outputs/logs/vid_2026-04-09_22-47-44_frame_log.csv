@@ -1,0 +1,8 @@
+frame_index,timestamp_sec,timestamp_mmss,face_found,face_probability,face_enthusiastic,body_detected,body_score,body_enthusiastic,decision_reason,frame_label
+0,0.0,00:00,True,0.882,True,True,0.0,False,face=ENTHUS (prob=0.88) body=still,enthusiastic
+30,1.25,00:01,False,0.0,False,True,0.227,True,no_face(side/back_cam) body=ACTIVE (score=0.227),enthusiastic
+60,2.5,00:02,True,0.56,True,True,0.394,True,face=ENTHUS (prob=0.56) body=active,enthusiastic
+90,3.75,00:03,False,0.0,False,True,0.4118,True,no_face(side/back_cam) body=ACTIVE (score=0.412),enthusiastic
+120,5.0,00:05,True,0.3361,False,True,0.4087,True,face=NOT_enthus (prob=0.34) body=active(ignored),not enthusiastic
+150,6.25,00:06,True,0.0854,False,True,0.4276,True,face=NOT_enthus (prob=0.09) body=active(ignored),not enthusiastic
+180,7.5,00:07,True,0.8459,True,True,0.3658,True,face=ENTHUS (prob=0.85) body=active,enthusiastic
