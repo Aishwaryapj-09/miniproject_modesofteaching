@@ -1,15 +1,11 @@
 """
 video_tester.py
 ================
-Give any video path — real or AI generated.
+Randomly selects a video from the hardcoded dataset folder.
 Model shows teaching mode on every frame.
 
-Folder structure (auto-created, nothing ever overwritten):
+Output folder structure (auto-created):
     teachingmodes/
-      test_frames/
-        MyLecture_2025-06-10_14-32-05/   ← new folder per video per run
-          frame_000002_boardonly.jpg
-          frame_000004_boardonly.jpg  ...
       outputs/
         output_MyLecture_2025-06-10_14-32-05.mp4
 
@@ -18,13 +14,11 @@ Keys while playing:
   S        → save screenshot
   P        → pause / resume
 
-CHANGE ONLY THE 2 PATHS MARKED ★ BELOW, THEN RUN:
+Just run:
   python video_tester.py
-Or:
-  python video_tester.py --video "C:\\path\\to\\video.mp4"
 """
 
-import argparse, os, time
+import argparse, os, time, random
 from datetime import datetime
 from pathlib import Path
 from collections import deque, Counter
@@ -33,16 +27,15 @@ import numpy as np, cv2, torch, torch.nn as nn
 from torchvision import models, transforms
 
 # ══════════════════════════════════════════════════════════════
-#  ★  CHANGE PATH 1 — your trained model file
+#  HARDCODED PATHS — change only these if needed
 # ══════════════════════════════════════════════════════════════
-DEFAULT_MODEL = r"C:\Users\LENOVO\Desktop\AISHWARYA_PJ -1MS23CS017\sem06\miniproject\teachingmodes\best_model.pth"
-# ══════════════════════════════════════════════════════════════
-#  ★  CHANGE PATH 2 — same MODEL_DIR used in model_trainer.py
-# ══════════════════════════════════════════════════════════════
-MODEL_DIR = r"C:\Users\LENOVO\Desktop\AISHWARYA_PJ -1MS23CS017\sem06\miniproject\teachingmodes"
+DEFAULT_MODEL = r"D:\AISHWARYA_PJ -1MS23CS017\sem06\miniproject\teachingmodes\best_model.pth"
+MODEL_DIR     = r"D:\AISHWARYA_PJ -1MS23CS017\sem06\miniproject\datasets\teachingmodes"
+VIDEO_FOLDER  = r"D:\AISHWARYA_PJ -1MS23CS017\sem06\miniproject\datasets\teachingmodes"
 # ══════════════════════════════════════════════════════════════
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".wmv"}
+DEVICE     = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,8 +76,6 @@ class Predictor:
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
-        # maxlen=5: reacts quickly to mode changes.
-        # maxlen=20 was too large — locked onto one class for the whole video.
         self.buf = deque(maxlen=5)
 
     def predict(self, frame_bgr):
@@ -164,10 +155,21 @@ def draw(frame, raw, smooth, conf, probs, class_names, fps, ts):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def fmt_time(seconds):
-    """Float seconds → 'MM:SS' string."""
     seconds = max(0.0, float(seconds))
     m, s    = divmod(int(seconds), 60)
     return f"{m:02d}:{s:02d}"
+
+
+def pick_random_video(folder):
+    """Recursively find all videos in folder and return one at random."""
+    folder = Path(folder)
+    videos = [f for ext in VIDEO_EXTS
+               for f in list(folder.rglob(f"*{ext}")) +
+                        list(folder.rglob(f"*{ext.upper()}"))]
+    if not videos:
+        return None
+    chosen = random.choice(videos)
+    return str(chosen)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -175,25 +177,18 @@ def fmt_time(seconds):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def print_summary(video_path, all_predictions, class_names,
-                  output_path, frames_dir, fps_src=25.0,
-                  total_frames=0, saved_images=0, true_duration=0.0):
-    """
-    all_predictions : list of (smooth_label, timestamp_seconds)
-    total_frames    : total raw frames read (frame_n)
-    saved_images    : JPG images saved to frames_dir
-    true_duration   : total_frames_cap / fps  — set before loop, always exact
-    """
+                  output_path, fps_src=25.0,
+                  total_frames=0, true_duration=0.0):
     total = len(all_predictions)
     if total == 0:
         return
 
-    labels    = [p[0] for p in all_predictions]
-    counts    = Counter(labels)
-    dominant  = counts.most_common(1)[0][0]
+    labels   = [p[0] for p in all_predictions]
+    counts   = Counter(labels)
+    dominant = counts.most_common(1)[0][0]
     frame_dur = 1.0 / max(fps_src, 1.0)
 
     # ── Time per mode ─────────────────────────────────────────────────────────
-    # ts = frame_n / fps so consecutive gaps are always exactly frame_dur
     time_per_mode = {cls: 0.0 for cls in class_names}
     for i, (lbl, ts) in enumerate(all_predictions):
         gap = (all_predictions[i + 1][1] - ts) if i + 1 < len(all_predictions) else frame_dur
@@ -208,8 +203,6 @@ def print_summary(video_path, all_predictions, class_names,
             time_per_mode[cls] = counts.get(cls, 0) * frame_dur
 
     # ── Verdict ───────────────────────────────────────────────────────────────
-    # If teacher used board independently >5% AND ppt independently >5%
-    # at different points in the video → verdict = boardandppt
     pct_board = time_per_mode.get("boardonly", 0.0) / total_time * 100
     pct_ppt   = time_per_mode.get("pptonly",   0.0) / total_time * 100
     verdict   = "boardandppt" if (pct_board > 5 and pct_ppt > 5) else dominant
@@ -223,11 +216,7 @@ def print_summary(video_path, all_predictions, class_names,
     display_duration = true_duration if true_duration > 0 else total_time
     print(f"\n  Video            : {Path(video_path).name}")
     print(f"  Video duration   : {fmt_time(display_duration)}")
-    print(f"  Total frames     : {total_frames}")
-    print(f"  Frames analysed  : {total}")
-    print(f"  Images saved     : {saved_images}")
 
-    # Time-based breakdown — no raw frame numbers, time + % only
     print(f"\n  {'─'*54}")
     print(f"  Teaching mode breakdown  (time spent in each mode):")
     print(f"  {'─'*54}")
@@ -241,13 +230,11 @@ def print_summary(video_path, all_predictions, class_names,
         else:
             print(f"  {label:<20s}  {fmt_time(t_cls)}  ({pct_t:5.1f}%)")
 
-    # Verdict — breakdown above already shows all times, no TIME IN MODE here
     print(f"\n  {'─'*54}")
     print(f"  VERDICT          : {LABELS.get(verdict, verdict)}")
     print(f"  CONCLUSION       : {DESCRIPTIONS.get(verdict, verdict)}")
     print(f"  {'─'*54}")
     print(f"\n  Annotated video  : {output_path}")
-    print(f"  Saved frames at  : {frames_dir}")
     print(f"{sep}\n")
 
 
@@ -255,46 +242,40 @@ def print_summary(video_path, all_predictions, class_names,
 #  Main
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_path():
-    print("\n" + "=" * 55)
-    print("  Teaching Mode — Video Tester")
-    print("=" * 55)
-    while True:
-        p = input("\n  Enter full path to video file:\n  > ").strip().strip('"').strip("'")
-        if os.path.isfile(p):
-            return p
-        print(f"  Not found: {p}\n  Check path and try again.")
-
-
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--video", default=None)
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--skip",  type=int, default=2,
                     help="Analyse 1 in every N frames (default 2)")
     args = ap.parse_args()
 
-    video_path = args.video if args.video else get_path()
+    # ── Pick a random video ───────────────────────────────────────────────────
+    print("\n" + "=" * 55)
+    print("  Teaching Mode — Video Tester")
+    print("=" * 55)
 
-    if not os.path.isfile(video_path):
-        print(f"\nERROR: Video not found:\n  {video_path}"); return
+    video_path = pick_random_video(VIDEO_FOLDER)
+    if not video_path:
+        print(f"\nERROR: No videos found in:\n  {VIDEO_FOLDER}")
+        print("Check the VIDEO_FOLDER path at the top of this file.")
+        return
+
+    print(f"\n  Randomly selected video : {Path(video_path).name}")
+
     if not os.path.isfile(args.model):
         print(f"\nERROR: Model not found:\n  {args.model}")
-        print("Run model_trainer.py first."); return
+        print("Run model_trainer.py first.")
+        return
 
-    # ── Timestamped folders ───────────────────────────────────────────────────
+    # ── Output path ───────────────────────────────────────────────────────────
     vid_stem    = Path(video_path).stem
     run_ts      = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    frames_dir  = os.path.join(MODEL_DIR, "test_frames", f"{vid_stem}_{run_ts}")
     outputs_dir = os.path.join(MODEL_DIR, "outputs")
     output_path = os.path.join(outputs_dir, f"output_{vid_stem}_{run_ts}.mp4")
-    os.makedirs(frames_dir,  exist_ok=True)
     os.makedirs(outputs_dir, exist_ok=True)
 
-    print(f"\n  Video  : {video_path}")
     print(f"  Model  : {args.model}")
     print(f"  Device : {DEVICE}")
-    print(f"\n  Test frames  → {frames_dir}")
     print(f"  Output video → {output_path}\n")
 
     predictor = Predictor(args.model)
@@ -303,7 +284,8 @@ def main():
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        print(f"ERROR: Cannot open video: {video_path}"); return
+        print(f"ERROR: Cannot open video: {video_path}")
+        return
 
     fps_src          = cap.get(cv2.CAP_PROP_FPS) or 25
     width            = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -321,7 +303,6 @@ def main():
     )
 
     frame_n  = 0
-    saved_n  = 0
     t_prev   = time.time()
     fps_disp = 0.0
     paused   = False
@@ -345,38 +326,10 @@ def main():
             now      = time.time()
             fps_disp = 0.88 * fps_disp + 0.12 / max(now - t_prev, 1e-6)
             t_prev   = now
-            # frame_n / fps is always exact.
-            # CAP_PROP_POS_MSEC after cap.read() points to the NEXT frame
-            # and is unreliable on many codecs — caused the "4 sec" bug.
-            ts = frame_n / max(fps_src, 1.0)
+            ts       = frame_n / max(fps_src, 1.0)
 
             if frame_n % args.skip == 0:
                 last_raw, last_smooth, last_conf, last_probs = predictor.predict(frame)
-
-                # Save annotated frame image
-                save_frame = frame.copy()
-                col = COLORS.get(last_smooth, (255, 255, 255))
-                cv2.putText(save_frame,
-                            f"{LABELS.get(last_smooth, last_smooth)}  {last_conf*100:.0f}%",
-                            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2, cv2.LINE_AA)
-                cv2.putText(save_frame, f"frame {frame_n:06d}",
-                            (10, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
-                            (200, 200, 200), 1, cv2.LINE_AA)
-                cv2.imwrite(
-                    os.path.join(frames_dir, f"frame_{frame_n:06d}_{last_smooth}.jpg"),
-                    save_frame
-                )
-                saved_n += 1
-
-                # Per-frame terminal line
-                m_ts, s_ts = divmod(int(ts), 60)
-                prob_str   = "  ".join(
-                    f"{cn}:{int(p*100):3d}%"
-                    for cn, p in zip(predictor.class_names, last_probs)
-                )
-                print(f"  [{m_ts:02d}:{s_ts:02d}] frame {frame_n:05d} "
-                      f"| {LABELS.get(last_smooth, last_smooth):<20s} "
-                      f"| {prob_str}")
 
             all_predictions.append((last_smooth, ts))
 
@@ -405,8 +358,8 @@ def main():
     cv2.destroyAllWindows()
 
     print_summary(video_path, all_predictions,
-                  predictor.class_names, output_path, frames_dir,
-                  fps_src, total_frames=frame_n, saved_images=saved_n,
+                  predictor.class_names, output_path,
+                  fps_src, total_frames=frame_n,
                   true_duration=true_duration)
 
 
